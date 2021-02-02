@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { Cells, Controls } from './';
+import { Board, Controls } from './';
 import { AutomataProvider } from '../automata-context'
 
 const Component = () => {
   return (
     <AutomataProvider>
-      <Cells />
+      <Board />
       <Controls/>
     </AutomataProvider>
   );

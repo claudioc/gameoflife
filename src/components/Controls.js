@@ -1,10 +1,18 @@
+import { useState, useEffect } from 'react';
 import { useAutomataDispatch, useAutomataState } from '../automata-context'
-
-let isRunning = false;
 
 const Component = () => {
   const dispatch = useAutomataDispatch();
   const automata = useAutomataState();
+  const [isRunning, setIsRunning] = useState(false);
+
+  useEffect(() => {
+    if (isRunning && automata.alive > 0) {
+      setImmediate(() => {
+        setTimeout(updateBoard, 0);
+      });
+    }
+  });
 
   const updateBoard = () => {
     dispatch({
@@ -12,44 +20,41 @@ const Component = () => {
     });
   }
 
-  const handleStep = () => {
+  const handleStepFwd = () => {
     updateBoard();
   };
 
+  const handleStepBack = () => {
+    dispatch({
+      type: 'undo'
+    })
+  };
+
   const handleGo = () => {
-    isRunning = true;
-    tick();
-
-    function tick() {
-      if (!isRunning) {
-        return;
-      }
-
-      updateBoard();
-      setImmediate(() => {
-        setTimeout(tick, 0);
-      });
-    }
+    setIsRunning(automata.alive > 0);
+    console.log('Started at:', Date.now());
   };
 
   const handleReset = () => {
-    isRunning = false;
+    setIsRunning(false);
     dispatch({
       type: 'reset'
     })
   };
 
   const handleStop = () => {
-    isRunning = false;
+    setIsRunning(false);
+    console.log('Stopped at:', Date.now());
   };
 
   return (
     <div className="controls">
-      <button onClick={handleGo}>Go!</button>
-      <button onClick={handleStop}>Stop</button>
-      <button onClick={handleStep}>Step</button>
+      {!isRunning && <button onClick={handleGo}>Go!</button>}
+      {isRunning && <button onClick={handleStop}>Stop</button>}
+      <button disabled={isRunning} onClick={handleStepFwd}>Step fwd</button>
+      <button disabled={isRunning} onClick={handleStepBack}>Step back</button>
       <button onClick={handleReset}>Reset</button>
-      <span> Gen: {automata.gen}</span>
+      <span> Gen: {automata.gen} – {automata.alive}</span>
     </div>
   )
 }

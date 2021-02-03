@@ -30,6 +30,7 @@ body * {
   float: left;
   background-color: white;
   border: 1px solid #f1f1f1;
+  /* transition: 0.15s all ease-in-out; */
 }
 
 .cell:hover {

@@ -7,6 +7,7 @@ const rowSize = 100 / sizeInPercent;
 const numberOfCells = rowSize * rowSize;
 const initialState = Array(numberOfCells).fill(0);
 console.log(`Rendering ${numberOfCells} cells.`)
+let snapshots = [];
 
 function neighbors(cells, idx) {
   return [
@@ -23,6 +24,18 @@ function neighbors(cells, idx) {
 
 function automataReducer(state, action) {
   switch (action.type) {
+    case 'undo': {
+      if (state.gen === 0) {
+        return state;
+      }
+      const newState = snapshots[state.gen - 1];
+      return {
+        alive: newState.filter(n => n === 1).length,
+        gen: state.gen - 1,
+        cells: newState
+      }
+    }
+
     case 'update': {
       const newState = [...state.cells];
       let alive;
@@ -45,7 +58,14 @@ function automataReducer(state, action) {
         }
       }
 
+      if (JSON.stringify(newState) === JSON.stringify(state.cells)) {
+        return state;
+      }
+
+      snapshots[state.gen] = state.cells;
+
       return {
+        alive: newState.filter(n => n === 1).length,
         gen: state.gen + 1,
         cells: newState
       }
@@ -54,6 +74,7 @@ function automataReducer(state, action) {
     case 'on': {
       state.cells[action.idx] = 1;
       return {
+        alive: state.alive + 1,
         gen: state.gen,
         cells: state.cells
       }
@@ -62,13 +83,16 @@ function automataReducer(state, action) {
     case 'off': {
       state.cells[action.idx] = 0;
       return {
+        alive: state.alive - 1,
         gen: state.gen,
         cells: state.cells
       }
     }
 
     case 'reset': {
+      snapshots = [];
       return {
+        alive: 0,
         gen: 0,
         cells: [...initialState]
       }
@@ -82,6 +106,7 @@ function automataReducer(state, action) {
 
 function AutomataProvider({children}) {
   const [state, dispatch] = React.useReducer(automataReducer, {
+    alive: 0,
     gen: 0,
     cells: [...initialState]
   });
